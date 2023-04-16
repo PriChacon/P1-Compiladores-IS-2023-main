@@ -1,0 +1,150 @@
+# | or
+# [] opcionales
+# {} pueden repetirse ninguna o más veces
+# ::= inicio de bloque
+# # comentario
+
+#podria tener una más sentencias dento del bloque 
+programa ::= main | funciones main | main funciones | funciones main funciones ######
+main ::= "int" "main" "("")" "{" bloque "}" #####
+funciones ::= funciones declaraFuncion
+    | declaraFuncion
+    | comentario
+
+numero ::= (-?)[1-9][0-9]* | 0   ##debe aceptar negativos
+letra ::= [a-zA-Z] ## debe aceptar otros caracteres
+simbolo ::= "!" | "@" | "#" | "$" | "%" | "^" | "&" | "*" | "(" | ")" | "-" | "_" | "+" | "=" | "[" | "]" | "{" | "}" | ";" | ":" | "'" | '"' | "," | "." | "<" | ">" | "?" | "/" | "|" | "\"
+
+#----operador ::= "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "!="
+
+#un identificador puede ser una letra
+#o una letra con varias letras o numeros
+identificador ::= [a-zA-Z_][a-zA-Z0-9_]*
+
+
+operando ::= identificador #######
+    | numero 
+    | llamaFuncion
+
+
+#Las expresiones permiten combinar literales, variables y/o funciones, 
+#de los tipos reconocidos en la gramática.
+expresion ::=  expresionRelLog | termino (opSuma termino)* #es un valor, respeta precedencia de operadores
+termino ::= factor (opMult factor)*
+factor ::= operadorUnario? valor #puede o no darse el operador unario, es opcional
+
+
+valor ::= intLiteral 
+    | floatLiteral 
+    | stringLiteral 
+    | charLiteral 
+    | boolLiteral 
+    | identificador array? 
+    | llamaFuncion
+
+
+#op binarios
+opSuma ::= "+" | "-"
+opMult ::= "*" | "**" | "/" | "~"
+opRelacional ::= "<" | "<=" | ">" | ">=" | "==" boolLiteral? | "!="  boolLiteral?
+operadorArit ::= opSuma | opMult
+#operador Unario
+operadorUnario ::= "-" | "++" | "--"
+operadorLogico ::= "^" | "#" | "!" | "not" 
+
+expresionAritmetica ::= operandoArit 
+    | expresionAritmetica operadorArit operandoArit
+expresionRelacional ::= operandoRel opRelacional operandoRel
+expresionLogica ::= terminoLogico
+    | expresionLogica operadorLogico terminoLogico
+    | terminoLogico operadorLogico expresionLogica
+expresionRelLog ::= expresionRelacional | expresionLogica
+
+terminoLogico  ::= operandoArit| boolLiteral | "("expresionRelacional")" | expresionRelacional
+operandoArit ::= identificador | intLiteral | floatLiteral | llamaFuncion
+operandoRel ::= operandoArit | "("expresionAritmetica")"
+
+#literales
+intLiteral ::= numero #####
+floatLiteral ::= (((-?)[1-9][0-9]*) | 0) . [0-9]+ | 0.0 #####
+stringLiteral ::= charLiteral | stringLiteral charLiteral #####
+charLiteral ::= "'" letra "'" | "'" numero "'" | simbolo #####
+boolLiteral ::= "true" | "false" #####
+array ::= expresion ("," expresion)* 
+
+#estructuras de control
+
+#elif else es opcional []
+if ::= "if" "("expresionRelLog")" "{" bloque "}"
+    | "if" "("expresionRelLog")" "{" bloque "}" elif
+    | "if" "("expresionRelLog")" "{" bloque "}" elif "else" "{" bloque "}"
+    | "if" "("expresionRelLog")" "{" bloque "}" "else" "{" bloque "}"
+elif ::= "elif" "("expresionRelLog")" "{" bloque "}" 
+    | elif "elif" "("expresionRelLog")" "{" bloque "}" 
+while ::= "while" "("expresionRelLog")" "{" bloque "}"
+doWhile ::= "do" "{" bloque "}" "while" "("expresionRelLog")" "$"
+for ::= "for" "(" declaraVar expresionRelLog "$" expresion ")" "{" bloque "}"
+
+
+estructuraControl ::=  if 
+    | while 
+    | doWhile 
+    | for
+
+
+return ::= "return" expresion
+break ::= "break"
+
+argumentos ::= expresion
+    | argumentos "," expresion 
+llamaFuncion ::= identificador "(" ")" "$"?
+    |identificador "(" argumentos ")" "$" ?
+    |lectura
+    | escritura
+asignacion ::= identificador "=" expresion "$"
+
+# Permitir sentencias para creación de variables, creación y asignación de expresiones
+#y asignación de expresiones a variables, y algunos casos, sólo expresiones sin 
+#asignación.
+
+
+sentencia ::= asignacion 
+    | llamaFuncion "$"
+    | estructuraControl 
+    | expresion "$"
+    | expresionLogica
+    | expresionRelacional
+    | expresionRelLog
+    | declaraVar "$"
+    | return "$"?
+    | break "$"
+    | comentario
+
+
+bloque ::= sentencia | bloque sentencia | sentencia bloque
+parametros ::= tipo identificador
+    | parametros "," tipo identificador
+declaraFuncion ::= tipo identificador "("parametros")" "{" bloque "}"
+    | tipo identificador "(" ")" "{" bloque "}"
+
+
+tipo ::= "int" 
+    | "float" 
+    | "string" 
+    | "char" 
+    | "array" 
+    | "bool"
+
+
+declaraArray ::= ("int"|"char") identificador declaraArrayAux "$"
+declaraArrayAux ::= "[" numero "]" | "["numero"]" declaraArrayAux
+declaraVar ::= tipo identificador declaraArrayAux? "=" expresion 
+
+getValorArray ::= identificador declaraArrayAux "$"?
+setValorArray ::= getValorArray "=" expresion 
+
+lectura ::= leer "(" numerico expresion")" "$"
+numerico ::= intLiteral | floatLiteral
+escritura ::= escribir "(" expresion ")" "$"
+
+comentario ::= "@" stringLiteral | "/_" stringLiteral "_/" #comentario simple o en bloque
