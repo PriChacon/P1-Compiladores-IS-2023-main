@@ -34,7 +34,7 @@ import java_cup.runtime.*;
 %}
 
 
-//----------Expresiones Regulares
+//--------Expresiones Regulares
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 
